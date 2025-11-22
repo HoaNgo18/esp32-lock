@@ -1,0 +1,106 @@
+
+:root { --black: #000; --white: #fff; }
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background: var(--white);
+  color: var(--black);
+}
+
+h2 { text-align: center; }
+
+.container {
+  max-width: 600px;
+  margin: auto;
+  background: var(--white);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--black);
+}
+
+fieldset {
+  border: 1px solid var(--black);
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+legend { font-weight: bold; color: var(--black); }
+
+.form-group { margin-bottom: 15px; }
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--black);
+  border-radius: 4px;
+  background: var(--white);
+  color: var(--black);
+}
+
+button {
+  background: var(--black);
+  color: var(--white);
+  padding: 10px 15px;
+  border: 1px solid var(--black);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+button:hover, button:focus {
+  background: var(--white);
+  color: var(--black);
+}
+
+button.danger {
+  background: var(--black);
+  color: var(--white);
+}
+
+button.danger:hover {
+  background: var(--white);
+  color: var(--black);
+}
+
+#status {
+  text-align: center;
+  font-weight: bold;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border: 1px solid var(--black);
+}
+
+.status-connected {
+  background: var(--white);
+  color: var(--black);
+}
+
+.status-disconnected {
+  background: var(--black);
+  color: var(--white);
+}
+
+#log-list {
+  list-style-type: none;
+  padding: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--black);
+}
+
+#log-list li {
+  padding: 8px;
+  border-bottom: 1px solid var(--black);
+}
+
+#log-list li:last-child { border-bottom: none; }
