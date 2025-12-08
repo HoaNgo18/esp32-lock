@@ -1,50 +1,151 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Khóa Thông Minh</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
-
-    <link rel="stylesheet" href="styles.css">
+    <title>Smart Lock Admin</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="container">
-        <h2>Bảng điều khiển Admin - Khóa Thông Minh</h2>
-
-        <div id="status" class="status-disconnected">Đang kết nối...</div>
-
-        <fieldset>
-            <legend>Quản lý User</legend>
-            
+    <div id="login-section" class="login-overlay">
+        <div class="login-box card">
+            <h2>Login System</h2>
+            <p class="subtitle">Smart Lock Management</p>
             <div class="form-group">
-                <label for="add-pass">Mật khẩu mới (Tối đa 6 số):</label>
-                <input type="text" id="add-pass" maxlength="6" placeholder="Nhập mật khẩu (VD: 123456)">
+                <input type="password" id="login-pass" placeholder="Enter admin password">
             </div>
-            <div class="form-group">
-                <label for="add-name">Tên người dùng:</label>
-                <input type="text" id="add-name" placeholder="Nhập tên (VD: Alice)">
-            </div>
-            <button id="btn-add">Thêm User</button>
-            
-            <hr style="margin: 20px 0; border-top: 1px solid #eee;">
-
-            <div class="form-group">
-                <label for="del-pass">Mật khẩu cần xóa:</label>
-                <input type="text" id="del-pass" maxlength="6" placeholder="Nhập mật khẩu (VD: 123456)">
-            </div>
-            <button id="btn-del" class="danger">Xóa User</button>
-        </fieldset>
-
-        <fieldset>
-            <legend>Nhật ký Mở khóa</legend>
-            <ul id="log-list">
-                <li>Chưa có nhật ký...</li>
-            </ul>
-        </fieldset>
+            <button id="btn-login" class="btn-primary">Login</button>
+            <p id="login-error" class="error-msg"></p>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <div id="dashboard-section" class="dashboard hidden">
+        
+        <div class="header card">
+            <div>
+                <h3>Web Admin</h3>
+                <p class="subtitle">ESP32 Smart Lock</p>
+            </div>
+            <div id="status" class="status-badge connecting">Connecting...</div>
+        </div>
+
+        <div class="controls card">
+            <button id="btn-show-remote">
+                <span class="btn-text">Remote Open</span>
+            </button>
+
+            <button id="btn-show-add">
+                <span class="btn-text">Add User</span>
+            </button>
+
+            <button id="btn-show-otp">
+                <span class="btn-text">Create OTP</span>
+            </button>
+
+            <button id="btn-show-del">
+                <span class="btn-text">Delete</span>
+            </button>
+
+            <button id="btn-logout">
+                <span class="btn-text">Logout</span>
+            </button>
+        </div>
+
+        <div class="users card">
+            <div class="card-head">
+                <h4>User List</h4>
+                <div class="search-mini">
+                    <input type="text" id="search-user" placeholder="Find..." onkeyup="filterUserTable()">
+                </div>
+            </div>
+            <div class="scroll-content">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Password</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="logs card">
+            <div class="card-head">
+                <h4>System Activity Log</h4>
+            </div>
+            <div class="scroll-content">
+                <ul id="log-list">
+                    <li class="text-center text-muted">Waiting for events...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-overlay" class="modal-overlay hidden"></div>
+
+    <div id="modal-remote" class="modal card hidden">
+        <h3 class="text-primary">Remote Open</h3>
+        <p class="subtitle">Unlock the door via WiFi?</p>
+        
+        <div style="margin: 20px 0; color: #bae6fd;">
+            <p>This action will unlock the door for 5 seconds.</p>
+        </div>
+
+        <div class="modal-actions">
+            <button id="btn-confirm-remote" class="btn-primary">Yes, Open Lock</button>
+            <button class="btn-cancel" onclick="closeAllModals()">Cancel</button>
+        </div>
+    </div>
+
+    <div id="modal-add" class="modal card hidden">
+        <h3 class="text-success">Add New User</h3>
+        <p class="subtitle">Register a new access code</p>
+        <div class="form-group">
+            <input type="text" id="inp-add-username" placeholder="Username (e.g. Alice)">
+        </div>
+        <div class="form-group">
+            <input type="number" id="inp-add-pass" placeholder="6-digit PIN (e.g. 123456)">
+        </div>
+        <div class="modal-actions">
+            <button id="btn-confirm-add" class="btn-success">Add User</button>
+            <button class="btn-cancel" onclick="closeAllModals()">Cancel</button>
+        </div>
+    </div>
+
+    <div id="modal-otp" class="modal card hidden">
+        <h3 class="text-warning">Guest OTP</h3>
+        <p class="subtitle">One-time password valid for single use</p>
+        
+        <div class="otp-display-box">
+            <h1 id="otp-value">------</h1>
+        </div>
+        
+        <div class="modal-actions">
+            <button id="btn-confirm-otp" class="btn-warning">Send to Lock</button>
+            <button class="btn-cancel" onclick="closeAllModals()">Close</button>
+        </div>
+    </div>
+
+    <div id="modal-del" class="modal card hidden">
+        <h3 class="text-danger">Delete User</h3>
+        <p class="subtitle">Enter the PIN code to remove</p>
+        <div class="form-group">
+            <input type="number" id="inp-del-pass" placeholder="Target PIN to delete">
+        </div>
+        <div class="modal-actions">
+            <button id="btn-confirm-del" class="btn-danger">Delete</button>
+            <button class="btn-cancel" onclick="closeAllModals()">Cancel</button>
+        </div>
+    </div>
+
 </body>
+<script src="script.js"></script>
 </html>
