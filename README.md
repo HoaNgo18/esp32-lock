@@ -32,3 +32,6 @@ Hệ thống khóa thông minh sử dụng **ESP32**, cho phép mở khóa bằn
     * Nhập mật khẩu + phím `#` để mở.
     * Nhấn `*` để xóa nhập liệu hoặc khóa lại.
     * **Master Password mặc định:** 180204.
+
+
+.\mosquitto -c mosquitto.conf -v
