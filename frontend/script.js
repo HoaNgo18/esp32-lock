@@ -175,37 +175,47 @@ function onConnectionLost(res) {
 }
 
 function onMessageArrived(message) {
+  // 1. Chỉ xử lý tin nhắn thuộc topic Log hệ thống
   if (message.destinationName !== MQTT_LOG_TOPIC) return;
 
   try {
     const data = JSON.parse(message.payloadString);
     const user = data.user || "Unknown";
     const action = data.action || "unknown_action";
-    const lockId = data.lock_id || "?";
+    
+    // LOGIC ĐỒNG BỘ DỮ LIỆU (DATA SYNC)
+    
+    // Xác định các hành động làm thay đổi dữ liệu trong Database
+    // (Bao gồm: Thêm mới, Xóa User, hoặc OTP tự hủy sau khi dùng)
+    const isDataChanged = 
+        action.includes("User added") || 
+        action.includes("User deleted") || 
+        action.includes("otp_deleted") || 
+        action === "created_otp";
 
+    // Nếu phát hiện dữ liệu thay đổi -> Gọi API load lại toàn bộ bảng User
+    if (isDataChanged) {
+        console.log(`[Sync] Data changed via MQTT (${action}) -> Reloading table...`);
+        loadDataFromBackend(); 
+    }
+
+    // LOGIC HIỂN THỊ LOG (UI ACTIVITY)
+    
+    // Phân loại log để gán màu sắc hiển thị (CSS Class)
     let logType = "";
     if (action.includes("unlocked") || action.includes("otp_used") || action.includes("added")) {
-      logType = "success";
+      logType = "success"; 
     } else if (action.includes("failed") || action.includes("lockout")) {
-      logType = "error";
+      logType = "error";   
     } else if (action.includes("locked") || action.includes("deleted")) {
-      logType = "warning";
+      logType = "warning"; 
     }
 
-    addLog(`${user} [Lock #${lockId}]`, action, logType);
-
-    if (action.includes("User added:")) {
-      const parts = action.split(": ");
-      if(parts.length > 1) addUserToTable(parts[1], "******", "user");
-    } else if (action.includes("User deleted:")) {
-      const parts = action.split(": ");
-      if(parts.length > 1) removeUserFromTable(parts[1]);
-    } else if (action === "created_otp") {
-      addUserToTable("GUEST (OTP)", "******", "otp");
-    }
+    // Luôn hiển thị dòng log sự kiện ra màn hình để Admin nắm bắt ngay
+    addLog(`${user}`, action, logType);
 
   } catch (e) {
-    console.error("JSON parse error:", e);
+    console.error("MQTT Message Error:", e);
   }
 }
 
