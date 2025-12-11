@@ -1,11 +1,13 @@
 // ============================================
 // CONFIGURATION
 // ============================================
-const MQTT_SERVER = "e8d92a81786b4564b07b2759213912d0.s1.eu.hivemq.cloud";
-const MQTT_PORT = 8884;
-const MQTT_PATH = "/mqtt";
-const MQTT_USER = "esp32_user";
-const MQTT_PASS = "Password123";
+const MQTT_SERVER = "192.168.1.7"; 
+
+// Lưu ý: Web dùng WebSockets 
+const MQTT_PORT   = 9001; 
+const MQTT_PATH   = "/mqtt";  
+const MQTT_USER   = ""; // Để trống (vì allow_anonymous true)
+const MQTT_PASS   = ""; // Để trống
 
 const MQTT_CMD_TOPIC = "lock/cmd";
 const MQTT_LOG_TOPIC = "lock/log";
@@ -114,7 +116,7 @@ function connectMQTT() {
 
   const connectOptions = {
     timeout: 30,
-    useSSL: true,
+    useSSL: false,
     userName: MQTT_USER,
     password: MQTT_PASS,
     keepAliveInterval: 60,
