@@ -1,6 +1,5 @@
 // Thư viện
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
@@ -12,10 +11,12 @@
 // Cấu hình WiFi & MQTT
 const char *ssid = "sushi_trash";
 const char *password = "12345677";
-const char *mqttServer = "e8d92a81786b4564b07b2759213912d0.s1.eu.hivemq.cloud";
-const int mqttPort = 8883;
-const char *username = "esp32_user";
-const char *pass = "Password123";
+
+// --- BẠN ĐIỀN NỐT IP MÁY TÍNH VÀO ĐÂY ---
+const char *mqttServer = "192.168.1.7"; 
+const int mqttPort = 1883; // Cổng 1883 (TCP thường)
+const char *username = "";
+const char *pass = "";
 
 #define LOCK_ID 2
 
@@ -23,9 +24,9 @@ const char *pass = "Password123";
 const char *mqttCmdTopic = "lock/cmd";
 const char *mqttLogTopic = "lock/log";
 
-// TLS client cho MQTT
-WiFiClientSecure secureClient;
-PubSubClient client(secureClient);
+// TLS client cho MQTT 
+WiFiClient espClient;
+PubSubClient client(espClient);
 Preferences preferences;
 
 // Phần cứng
@@ -78,11 +79,14 @@ void reconnect();
 void setLEDs(bool r, bool y, bool g);
 void drawScreen(const char *status = "", const char *line2 = "");
 void checkPassword();
+void handleUnlock(String user, bool isOTP);
+void handleFailedAttempt();
 
 // Gửi log MQTT
 void publishLog(String user, String action)
 {
-  StaticJsonDocument<200> doc;
+  // Dùng JsonDocument thay cho StaticJsonDocument (ArduinoJson v7)
+  JsonDocument doc;
   doc["user"] = user;
   doc["action"] = action;
   doc["lock_id"] = LOCK_ID; // Thêm lock_id để phân biệt nhiều khóa
@@ -105,7 +109,7 @@ void callback(char *topic, byte *payload, unsigned int length)
 {
   Serial.println("Received MQTT command");
 
-  StaticJsonDocument<256> doc;
+  JsonDocument doc;
   DeserializationError error = deserializeJson(doc, payload, length);
 
   if (error)
@@ -122,12 +126,7 @@ void callback(char *topic, byte *payload, unsigned int length)
   if (strcmp(command, "remote_open") == 0)
   {
     String reqUser = doc["user"] | "Admin";
-    unlocked = true;
-    unlockTime = millis();
-    failCount = 0; // Reset fail count khi remote open
-    setLEDs(0, 0, 1);
-    drawScreen("REMOTE OPEN", reqUser.c_str());
-    publishLog(reqUser, "remote_unlocked");
+    handleUnlock(reqUser, false);
     Serial.println("Remote open success");
   }
   // ADD USER 
@@ -240,25 +239,23 @@ void setupWifi()
     Serial.println("\nWiFi connection failed");
     drawScreen("WiFi Failed!", "Restarting...");
     delay(2000);
-    ESP.restart();
+    // ESP.restart(); // Tạm tắt restart để debug
+  } else {
+    Serial.println("\nWiFi connected");
+    Serial.printf("IP: %s\n", WiFi.localIP().toString().c_str());
+    drawScreen("WiFi Connected!", WiFi.localIP().toString().c_str());
+    delay(1500);
   }
-
-  Serial.println("\nWiFi connected");
-  Serial.printf("IP: %s\n", WiFi.localIP().toString().c_str());
-  drawScreen("WiFi Connected!", WiFi.localIP().toString().c_str());
-  delay(1500);
 }
 
-// Kết nối MQTT
 void reconnect()
 {
+  if (WiFi.status() != WL_CONNECTED) return;
+
   while (!client.connected())
   {
     Serial.print("Connecting to MQTT...");
     drawScreen("MQTT Connecting...");
-
-    // CẢNH BÁO: setInsecure() chỉ cho test. Production phải dùng CA cert!
-    secureClient.setInsecure();
 
     String cid = String("esp32-lock-") + LOCK_ID;
     if (client.connect(cid.c_str(), username, pass))
@@ -297,7 +294,10 @@ void drawScreen(const char *status, const char *line2)
 
   oled.setCursor(0, 16);
   oled.print(F("Pass: "));
-  for (uint8_t i = 0; i < line.length(); ++i)
+  
+  // Chỉ hiển thị tối đa 12 ký tự cuối để tránh tràn màn hình
+  int startIdx = (line.length() > 12) ? (line.length() - 12) : 0;
+  for (uint8_t i = startIdx; i < line.length(); ++i)
   {
     oled.print('*');
   }
@@ -315,6 +315,45 @@ void drawScreen(const char *status, const char *line2)
   oled.display();
 }
 
+// Hàm xử lý khi mở khóa thành công
+void handleUnlock(String user, bool isOTP) {
+  unlocked = true;
+  unlockTime = millis();
+  failCount = 0; // Reset fail count khi remote open
+  setLEDs(0, 0, 1);
+  
+  if (isOTP)
+    drawScreen("OTP UNLOCK", "Auto-lock 5s");
+  else
+    drawScreen("UNLOCKED", user.c_str());
+    
+  publishLog(user, isOTP ? "otp_used" : "unlocked");
+  Serial.printf("Unlocked by: %s\n", user.c_str());
+}
+
+// Hàm xử lý khi nhập sai
+void handleFailedAttempt() {
+  failCount++;
+  showingError = true;
+  errorTime = millis();
+  setLEDs(1, 0, 0); // Đèn đỏ
+
+  char errMsg[32];
+  snprintf(errMsg, sizeof(errMsg), "Wrong! (%d/%d)", failCount, MAX_FAIL_ATTEMPTS);
+  drawScreen(errMsg);
+
+  publishLog("Unknown", "failed_attempt");
+  Serial.printf("Failed attempt #%d\n", failCount);
+
+  // Trigger lockout nếu sai quá nhiều
+  if (failCount >= MAX_FAIL_ATTEMPTS)
+  {
+    lockoutTime = millis();
+    drawScreen("TOO MANY FAILS!", "Locked 30s");
+    publishLog("System", "lockout_triggered");
+  }
+}
+
 // ==========================================
 // LOGIC CHECK PASSWORD (VIRTUAL PASSWORD MODE)
 // ==========================================
@@ -325,7 +364,6 @@ void checkPassword()
   const int PASS_LEN = 6; // Độ dài quy định của mật khẩu thật
 
   // 1. Kiểm tra độ dài tối thiểu
-  // Nếu nhập ít hơn 6 ký tự thì chắc chắn sai
   if (len < PASS_LEN)
   {
     handleFailedAttempt();
@@ -335,20 +373,16 @@ void checkPassword()
   bool matchFound = false;
   String foundUser = "";
   bool isOTP = false;
-  String realPassSegment = ""; // Lưu đoạn mật khẩu đúng tìm thấy
 
   // ----------------------------------------
   // THUẬT TOÁN CỬA SỔ TRƯỢT (SLIDING WINDOW)
-  // Duyệt qua chuỗi nhập: input[0..5], input[1..6], input[2..7]...
   // ----------------------------------------
   
   // A. KIỂM TRA MASTER PASS & USERS
-  // Mở preferences 1 lần để tối ưu hiệu năng
   preferences.begin("users", true); 
 
   for (int i = 0; i <= len - PASS_LEN; i++)
   {
-    // Cắt ra chuỗi con 6 ký tự tại vị trí i
     String segment = input.substring(i, i + PASS_LEN);
 
     // 1. Check Master
@@ -356,8 +390,7 @@ void checkPassword()
     {
       matchFound = true;
       foundUser = "MASTER";
-      realPassSegment = segment;
-      break; // Tìm thấy thì thoát vòng lặp ngay
+      break; 
     }
 
     // 2. Check Users (Trong bộ nhớ Flash)
@@ -365,16 +398,15 @@ void checkPassword()
     {
       foundUser = preferences.getString(segment.c_str(), "Unknown");
       matchFound = true;
-      realPassSegment = segment;
       break;
     }
   }
-  preferences.end(); // Đóng ngay sau khi kiểm tra xong
+  preferences.end(); 
 
   // B. KIỂM TRA OTP (Nếu chưa tìm thấy User/Master)
   if (!matchFound)
   {
-    preferences.begin("otps", false); // Mở chế độ RW để xóa nếu dùng
+    preferences.begin("otps", false); 
     for (int i = 0; i <= len - PASS_LEN; i++)
     {
       String segment = input.substring(i, i + PASS_LEN);
@@ -410,45 +442,6 @@ void checkPassword()
   line = "";
 }
 
-// Hàm phụ trợ: Xử lý khi mở khóa thành công
-void handleUnlock(String user, bool isOTP) {
-  unlocked = true;
-  unlockTime = millis();
-  failCount = 0; // Reset số lần sai
-  setLEDs(0, 0, 1); // Đèn xanh
-
-  if (isOTP)
-    drawScreen("OTP UNLOCK", "Auto-lock 5s");
-  else
-    drawScreen("UNLOCKED", user.c_str());
-
-  publishLog(user, isOTP ? "otp_used" : "unlocked");
-  Serial.printf("Unlocked by: %s\n", user.c_str());
-}
-
-// Hàm phụ trợ: Xử lý khi nhập sai
-void handleFailedAttempt() {
-  failCount++;
-  showingError = true;
-  errorTime = millis();
-  setLEDs(1, 0, 0); // Đèn đỏ
-
-  char errMsg[32];
-  snprintf(errMsg, sizeof(errMsg), "Wrong! (%d/%d)", failCount, MAX_FAIL_ATTEMPTS);
-  drawScreen(errMsg);
-
-  publishLog("Unknown", "failed_attempt");
-  Serial.printf("Failed attempt #%d\n", failCount);
-
-  // Trigger lockout nếu sai quá nhiều
-  if (failCount >= MAX_FAIL_ATTEMPTS)
-  {
-    lockoutTime = millis();
-    drawScreen("TOO MANY FAILS!", "Locked 30s");
-    publishLog("System", "lockout_triggered");
-  }
-}
-
 // SETUP
 void setup()
 {
@@ -459,8 +452,7 @@ void setup()
   if (!oled.begin(SSD1306_SWITCHCAPVCC, I2C_ADDR))
   {
     Serial.println(F("OLED init failed - check I2C"));
-    while (1)
-      delay(10);
+    while (1) delay(10);
   }
   oled.setRotation(0);
   oled.clearDisplay();
@@ -511,7 +503,7 @@ void loop()
       char msg[32];
       snprintf(msg, sizeof(msg), "Locked: %lus", remaining);
       drawScreen("SYSTEM LOCKOUT", msg);
-      delay(1000);
+      delay(200); // Giảm delay để nút bấm nhạy hơn nếu cần thoát
       return;
     }
     else
@@ -610,12 +602,13 @@ void loop()
     {
       line += k;
       Serial.printf("Key: %c (Length: %d)\n", k, line.length());
+      drawScreen();
     }
     else
     {
       drawScreen("Max length!", "Press # to check");
       delay(1000);
+      drawScreen();
     }
-    drawScreen();
   }
 }
