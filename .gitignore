@@ -1,0 +1,8 @@
+# Bỏ qua tất cả thư mục node_modules ở bất cứ đâu trong dự án
+node_modules/
+
+# File biến môi trường chứa mật khẩu (Quan trọng)
+.env
+
+# File rác của macOS
+.DS_Store
