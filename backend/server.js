@@ -62,12 +62,18 @@ mqttClient.on('message', async (topic, message) => {
             await newLog.save();
             console.log(`[DB-LOG] Saved: ${payload.user} - ${payload.action}`);
         }
+        // Kiểm tra nếu là sự kiện xóa OTP từ thiết bị
+        if (payload.action && payload.action.startsWith('otp_deleted:')) {
+            const usedOtp = payload.action.split(':')[1]; // Lấy mã phía sau dấu hai chấm
+            await User.findOneAndDelete({ pass: usedOtp });
+            console.log(`[DB-OTP] Auto-deleted used OTP: ${usedOtp}`);
+        }
 
         // B. Xử lý đồng bộ User Database khi có lệnh Add/Delete
         // Lưu ý: Ta bắt lệnh CMD để lấy password (vì Log không chứa pass)
         if (topic === TOPIC_CMD) {
             const cmd = payload.command;
-            
+
             if (cmd === 'add_user') {
                 // Upsert: Nếu chưa có thì thêm, có rồi thì update tên
                 await User.findOneAndUpdate(
@@ -76,17 +82,17 @@ mqttClient.on('message', async (topic, message) => {
                     { upsert: true, new: true }
                 );
                 console.log(`[DB-USER] Added/Updated: ${payload.username}`);
-            } 
+            }
             else if (cmd === 'del_user') {
                 await User.findOneAndDelete({ pass: payload.pass });
                 console.log(`[DB-USER] Deleted pass: ${payload.pass}`);
             }
             else if (cmd === 'add_otp') {
                 // OTP thường dùng 1 lần, nhưng vẫn lưu để biết
-                await User.create({ 
-                    username: 'GUEST (OTP)', 
-                    pass: payload.pass, 
-                    type: 'otp' 
+                await User.create({
+                    username: 'GUEST (OTP)',
+                    pass: payload.pass,
+                    type: 'otp'
                 });
                 console.log(`[DB-OTP] Created OTP`);
             }
