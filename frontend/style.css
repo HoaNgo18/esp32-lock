@@ -7,16 +7,25 @@
     --bg-input: #334155;
     --text-main: #f1f5f9;
     --text-muted: #94a3b8;
-    
+
     /* Colors Palette */
-    --primary: #60a5fa;  /* Blue */
-    --danger: #f87171;   /* Red */
-    --success: #34d399;  /* Green */
-    --warning: #fbbf24;  /* Orange */
+    --primary: #60a5fa;
+    /* Blue */
+    --danger: #f87171;
+    /* Red */
+    --success: #34d399;
+    /* Green */
+    --warning: #fbbf24;
+    /* Orange */
     --radius: 12px;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
 
 body {
     background-color: var(--bg-body);
@@ -30,58 +39,150 @@ body {
    2. UI COMPONENTS & UTILITIES
    ============================================ */
 /* Text Colors */
-.text-primary { color: var(--primary) !important; }
-.text-success { color: var(--success) !important; }
-.text-warning { color: var(--warning) !important; }
-.text-danger  { color: var(--danger) !important; }
-
-/* Buttons */
-.btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-cancel {
-    width: 100%; padding: 10px;
-    font-weight: 600; border-radius: 50px; border: none; cursor: pointer;
-    transition: 0.3s; margin-top: 10px;
+.text-primary {
+    color: var(--primary) !important;
 }
 
-.btn-primary { background: var(--primary); color: #0f172a; }
-.btn-primary:hover { filter: brightness(1.2); box-shadow: 0 0 10px rgba(96, 165, 250, 0.4); }
+.text-success {
+    color: var(--success) !important;
+}
 
-.btn-success { background: var(--success); color: #0f172a; }
-.btn-success:hover { filter: brightness(1.2); box-shadow: 0 0 10px rgba(52, 211, 153, 0.4); }
+.text-warning {
+    color: var(--warning) !important;
+}
 
-.btn-warning { background: var(--warning); color: #0f172a; }
-.btn-warning:hover { filter: brightness(1.2); box-shadow: 0 0 10px rgba(251, 191, 36, 0.4); }
+.text-danger {
+    color: var(--danger) !important;
+}
 
-.btn-danger { background: var(--danger); color: #fff; }
-.btn-danger:hover { filter: brightness(1.2); box-shadow: 0 0 10px rgba(248, 113, 113, 0.4); }
+/* Buttons */
+.btn-primary,
+.btn-success,
+.btn-danger,
+.btn-warning,
+.btn-cancel {
+    width: 100%;
+    padding: 10px;
+    font-weight: 600;
+    border-radius: 50px;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 10px;
+}
 
-.btn-cancel { background: transparent; border: 1px solid #475569; color: var(--text-muted); }
-.btn-cancel:hover { border-color: #fff; color: #fff; }
+.btn-primary {
+    background: var(--primary);
+    color: #0f172a;
+}
 
-.error-msg { color: var(--danger); margin-top: 15px; min-height: 20px; font-size: 0.9rem;}
+.btn-primary:hover {
+    filter: brightness(1.2);
+    box-shadow: 0 0 10px rgba(96, 165, 250, 0.4);
+}
+
+.btn-success {
+    background: var(--success);
+    color: #0f172a;
+}
+
+.btn-success:hover {
+    filter: brightness(1.2);
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.4);
+}
+
+.btn-warning {
+    background: var(--warning);
+    color: #0f172a;
+}
+
+.btn-warning:hover {
+    filter: brightness(1.2);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: #fff;
+}
+
+.btn-danger:hover {
+    filter: brightness(1.2);
+    box-shadow: 0 0 10px rgba(248, 113, 113, 0.4);
+}
+
+.btn-cancel {
+    background: transparent;
+    border: 1px solid #475569;
+    color: var(--text-muted);
+}
+
+.btn-cancel:hover {
+    border-color: #fff;
+    color: #fff;
+}
+
+.error-msg {
+    color: var(--danger);
+    margin-top: 15px;
+    min-height: 20px;
+    font-size: 0.9rem;
+}
 
 /* ============================================
    3. LOGIN SECTION
    ============================================ */
 .login-overlay {
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%;
-    display: flex; justify-content: center; align-items: center;
-    background: var(--bg-body); z-index: 9999;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg-body);
+    z-index: 9999;
 }
+
 .login-box {
-    width: 100%; max-width: 360px; padding: 30px; text-align: center;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 10000;
+    width: 100%;
+    max-width: 360px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    z-index: 10000;
 }
-.login-box h2 { font-size: 1.5rem; margin-bottom: 5px; color: var(--primary); }
-.login-box .subtitle { margin-bottom: 25px; color: var(--text-muted); }
+
+.login-box h2 {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+    color: var(--primary);
+}
+
+.login-box .subtitle {
+    margin-bottom: 25px;
+    color: var(--text-muted);
+}
 
 .form-group input {
-    width: 100%; padding: 12px 15px; background: var(--bg-input);
-    border: 1px solid #475569; border-radius: 50px;
-    color: #fff; margin-bottom: 15px; outline: none; text-align: center;
-    transition: 0.3s; font-size: 1rem;
+    width: 100%;
+    padding: 12px 15px;
+    background: var(--bg-input);
+    border: 1px solid #475569;
+    border-radius: 50px;
+    color: #fff;
+    margin-bottom: 15px;
+    outline: none;
+    text-align: center;
+    transition: 0.3s;
+    font-size: 1rem;
 }
-.form-group input:focus { border-color: var(--primary); background: #1e293b; }
+
+.form-group input:focus {
+    border-color: var(--primary);
+    background: #1e293b;
+}
 
 /* ============================================
    4. DASHBOARD GRID LAYOUT
@@ -89,120 +190,516 @@ body {
 .dashboard {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: 70px repeat(4, 1fr);
+    grid-template-rows: auto 70px repeat(4, 1fr);
     gap: 15px;
-    height: 100%; width: 100%;
-    max-width: 1200px; margin: 0 auto; padding: 20px;
+    height: 100%;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
-.header   { grid-column: 1; grid-row: 1; }
-.controls { grid-column: 2 / span 3; grid-row: 1; }
-.users    { grid-column: 1; grid-row: 2 / span 4; }
-.logs     { grid-column: 2 / span 3; grid-row: 2 / span 4; }
+.lock-navbar {
+    grid-column: 1 / -1;
+    grid-row: 1;
+}
+
+.header {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.controls {
+    grid-column: 2 / span 3;
+    grid-row: 2;
+}
+
+.users {
+    grid-column: 1;
+    grid-row: 3 / span 4;
+}
+
+.logs {
+    grid-column: 2 / span 3;
+    grid-row: 3 / span 4;
+}
+
+/* ============================================
+   4.1 LOCK SELECTOR NAVBAR
+   ============================================ */
+.lock-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid #334155;
+    border-radius: var(--radius);
+    padding: 12px 20px;
+}
+
+.navbar-brand {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.lock-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.lock-selector label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.lock-selector select {
+    background: var(--bg-input);
+    border: 1px solid #475569;
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    cursor: pointer;
+    min-width: 180px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.lock-selector select:hover {
+    border-color: var(--primary);
+}
+
+.lock-selector select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+/* ============================================
+   4.2 DATE FILTER (Log Card)
+   ============================================ */
+.date-filter input[type="date"] {
+    background: var(--bg-input);
+    border: 1px solid #475569;
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--text-main);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.date-filter input[type="date"]:hover {
+    border-color: var(--primary);
+}
+
+.date-filter input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+/* Style the date picker icon */
+.date-filter input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
 
 .card {
-    background: var(--bg-card); border: 1px solid #334155;
-    border-radius: var(--radius); padding: 15px;
-    display: flex; flex-direction: column; overflow: hidden;
+    background: var(--bg-card);
+    border: 1px solid #334155;
+    border-radius: var(--radius);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
+
 .header {
-    flex-direction: row; align-items: center; justify-content: space-between;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     background: #1e293b;
 }
-.header h3 { font-size: 1.1rem; color: var(--primary); font-weight: 600; }
-.header .subtitle { font-size: 0.8rem; color: #bae6fd; margin-top: 2px; }
+
+.header h3 {
+    font-size: 1.1rem;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.header .subtitle {
+    font-size: 0.8rem;
+    color: #bae6fd;
+    margin-top: 2px;
+}
 
 /* ============================================
    5. CONTROL BUTTONS
    ============================================ */
 .controls {
-    display: flex; flex-direction: row; align-items: center; gap: 12px; padding: 0 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
 }
+
 .controls button {
-    padding: 8px 24px; background: transparent; border: 1px solid;
-    border-radius: 50px; font-weight: 500; font-size: 0.85rem;
-    cursor: pointer; transition: all 0.3s ease;
+    padding: 8px 24px;
+    background: transparent;
+    border: 1px solid;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
-.controls button:hover { transform: translateY(-2px); }
+
+.controls button:hover {
+    transform: translateY(-2px);
+}
 
 /* REMOTE OPEN -> BLUE */
-#btn-show-remote { color: var(--primary); border-color: rgba(96, 165, 250, 0.4); }
-#btn-show-remote:hover { border-color: var(--primary); background: rgba(96, 165, 250, 0.1); }
+#btn-show-remote {
+    color: var(--primary);
+    border-color: rgba(96, 165, 250, 0.4);
+}
+
+#btn-show-remote:hover {
+    border-color: var(--primary);
+    background: rgba(96, 165, 250, 0.1);
+}
 
 /* ADD USER -> GREEN */
-#btn-show-add { color: var(--success); border-color: rgba(52, 211, 153, 0.4); }
-#btn-show-add:hover { border-color: var(--success); background: rgba(52, 211, 153, 0.1); }
+#btn-show-add {
+    color: var(--success);
+    border-color: rgba(52, 211, 153, 0.4);
+}
+
+#btn-show-add:hover {
+    border-color: var(--success);
+    background: rgba(52, 211, 153, 0.1);
+}
 
 /* OTP -> ORANGE */
-#btn-show-otp { color: var(--warning); border-color: rgba(251, 191, 36, 0.4); }
-#btn-show-otp:hover { border-color: var(--warning); background: rgba(251, 191, 36, 0.1); }
+#btn-show-otp {
+    color: var(--warning);
+    border-color: rgba(251, 191, 36, 0.4);
+}
+
+#btn-show-otp:hover {
+    border-color: var(--warning);
+    background: rgba(251, 191, 36, 0.1);
+}
 
 /* DELETE -> RED */
-#btn-show-del { color: var(--danger); border-color: rgba(248, 113, 113, 0.4); }
-#btn-show-del:hover { border-color: var(--danger); background: rgba(248, 113, 113, 0.1); }
+#btn-show-del {
+    color: var(--danger);
+    border-color: rgba(248, 113, 113, 0.4);
+}
 
-#btn-logout { margin-left: auto; color: var(--text-muted); border-color: rgba(148, 163, 184, 0.3); }
-#btn-logout:hover { color: #fff; border-color: #fff; }
+#btn-show-del:hover {
+    border-color: var(--danger);
+    background: rgba(248, 113, 113, 0.1);
+}
+
+#btn-logout {
+    margin-left: auto;
+    color: var(--text-muted);
+    border-color: rgba(148, 163, 184, 0.3);
+}
+
+#btn-logout:hover {
+    color: #fff;
+    border-color: #fff;
+}
 
 /* ============================================
    6. LISTS & LOGS
    ============================================ */
 .card-head {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #334155;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #334155;
 }
-.users .card-head h4, .logs .card-head h4 { color: var(--primary); }
+
+.users .card-head h4,
+.logs .card-head h4 {
+    color: var(--primary);
+}
 
 .search-mini input {
-    background: var(--bg-input); border: 1px solid #475569;
-    padding: 6px 15px; border-radius: 50px; color: #fff; font-size: 0.85rem;
+    background: var(--bg-input);
+    border: 1px solid #475569;
+    padding: 6px 15px;
+    border-radius: 50px;
+    color: #fff;
+    font-size: 0.85rem;
 }
-.scroll-content { flex: 1; overflow-y: auto; }
-.user-table { width: 100%; border-collapse: collapse; }
-.user-table th { text-align: left; color: var(--text-muted); padding-bottom: 10px; }
-.user-table td { padding: 12px 0; border-bottom: 1px solid #334155; color: #e2e8f0; }
 
-#log-list { list-style: none; font-family: 'Courier New', monospace; font-size: 0.85rem; }
+.scroll-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.user-table th {
+    text-align: left;
+    color: var(--text-muted);
+    padding-bottom: 10px;
+}
+
+.user-table td {
+    padding: 12px 0;
+    border-bottom: 1px solid #334155;
+    color: #e2e8f0;
+}
+
+#log-list {
+    list-style: none;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+}
+
 #log-list li {
-    padding: 6px 10px; margin-bottom: 5px; border-radius: 6px;
-    background: #0f172a; border-left: 3px solid transparent;
+    padding: 6px 10px;
+    margin-bottom: 5px;
+    border-radius: 6px;
+    background: #0f172a;
+    border-left: 3px solid transparent;
 }
-#log-list li.success { color: var(--success); border-color: var(--success); }
-#log-list li.error { color: var(--danger); border-color: var(--danger); }
-#log-list li.warning { color: var(--warning); border-color: var(--warning); }
 
-.status-badge { padding: 5px 15px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; }
-.status-badge.connected { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
-.status-badge.disconnected { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
-.hidden { display: none !important; }
+#log-list li.success {
+    color: var(--success);
+    border-color: var(--success);
+}
+
+#log-list li.error {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+#log-list li.warning {
+    color: var(--warning);
+    border-color: var(--warning);
+}
+
+.status-badge {
+    padding: 5px 15px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-badge.connected {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.disconnected {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.hidden {
+    display: none !important;
+}
 
 /* ============================================
    7. MODALS STYLING
    ============================================ */
 .modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 5000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 5000;
 }
+
 .modal {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 90%; max-width: 350px; z-index: 5001;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 350px;
+    z-index: 5001;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    animation: modalPop 0.3s ease-out; text-align: center;
+    animation: modalPop 0.3s ease-out;
+    text-align: center;
 }
-.modal h3 { margin-bottom: 5px; font-size: 1.4rem; }
-.modal .subtitle { margin-bottom: 20px; color: var(--text-muted); }
-.modal-actions { display: flex; gap: 10px; margin-top: 10px; }
+
+.modal h3 {
+    margin-bottom: 5px;
+    font-size: 1.4rem;
+}
+
+.modal .subtitle {
+    margin-bottom: 20px;
+    color: var(--text-muted);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
 
 .otp-display-box {
-    background: #0f172a; border: 2px dashed var(--warning);
-    padding: 15px; margin-bottom: 20px; border-radius: 8px;
+    background: #0f172a;
+    border: 2px dashed var(--warning);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
 }
-.otp-display-box h1 { font-family: 'Courier New', monospace; font-size: 2rem; letter-spacing: 5px; color: var(--warning); }
+
+.otp-display-box h1 {
+    font-family: 'Courier New', monospace;
+    font-size: 2rem;
+    letter-spacing: 5px;
+    color: var(--warning);
+}
 
 @keyframes modalPop {
-    from { opacity: 0; transform: translate(-50%, -45%); }
-    to { opacity: 1; transform: translate(-50%, -50%); }
+    from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
 }
 
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 10px;
+}
+
+/* ============================================
+   8. MOBILE RESPONSIVE (Dán vào cuối file)
+   ============================================ */
+@media screen and (max-width: 768px) {
+
+    /* 1. Cho phép cuộn trang trên điện thoại */
+    body {
+        height: auto;
+        overflow-y: auto;
+        /* Mở khóa cuộn dọc */
+        padding-bottom: 20px;
+    }
+
+    /* 2. Chuyển Layout từ Grid (Lưới) sang Flex dọc (Stack) */
+    .dashboard {
+        display: flex;
+        flex-direction: column;
+        grid-template-columns: 1fr;
+        /* Hủy bỏ chia cột */
+        grid-template-rows: auto;
+        gap: 15px;
+        height: auto;
+        padding: 10px;
+    }
+
+    /* 3. Reset vị trí các thẻ Card (để chúng xếp chồng lên nhau) */
+    .lock-navbar,
+    .header,
+    .controls,
+    .users,
+    .logs {
+        grid-column: auto !important;
+        grid-row: auto !important;
+        width: 100%;
+        min-height: auto;
+    }
+
+    /* 3.1 Lock Navbar trên mobile */
+    .lock-navbar {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .lock-selector {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .lock-selector select {
+        flex: 1;
+        min-width: unset;
+    }
+
+    /* 4. Tùy chỉnh phần Header */
+    .header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+
+    /* 5. Tùy chỉnh nút bấm (To hơn cho dễ bấm) */
+    .controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        /* Chia 2 nút một hàng */
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .controls button {
+        width: 100%;
+        margin: 0;
+        padding: 12px;
+        /* Nút cao hơn để ngón tay dễ chạm */
+        font-size: 0.9rem;
+    }
+
+    /* Nút Logout nằm riêng một dòng cho đỡ nhầm */
+    #btn-logout {
+        grid-column: 1 / -1;
+        /* Chiếm hết chiều ngang */
+        margin-top: 5px;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* 6. Giới hạn chiều cao bảng User và Log (để trang không quá dài) */
+    .users .scroll-content,
+    .logs .scroll-content {
+        max-height: 300px;
+        /* Chỉ cao tối đa 300px, còn lại cuộn bên trong */
+        min-height: 200px;
+    }
+
+    /* 7. Modal (Hộp thoại) trên mobile */
+    .modal {
+        width: 95%;
+        /* Chiếm 95% màn hình */
+        max-width: none;
+    }
+
+    .modal h3 {
+        font-size: 1.2rem;
+    }
+
+    /* 8. Ẩn bớt các cột không cần thiết trong bảng User nếu cần */
+    /* Ví dụ: .user-table th:nth-child(2), .user-table td:nth-child(2) { display: none; } */
+}

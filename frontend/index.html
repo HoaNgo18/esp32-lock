@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <div id="login-section" class="login-overlay">
@@ -23,7 +25,19 @@
     </div>
 
     <div id="dashboard-section" class="dashboard hidden">
-        
+
+        <!-- Lock Selector Navbar -->
+        <nav class="lock-navbar">
+            <div class="navbar-brand">Smart Lock Admin</div>
+            <div class="lock-selector">
+                <label for="lock-select">Lock:</label>
+                <select id="lock-select">
+                    <option value="1">Lock #1 - Front Door</option>
+                    <option value="2">Lock #2 - Back Door</option>
+                </select>
+            </div>
+        </nav>
+
         <div class="header card">
             <div>
                 <h3>Web Admin</h3>
@@ -71,7 +85,9 @@
                         </tr>
                     </thead>
                     <tbody id="user-table-body">
-                        <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">Loading...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -79,7 +95,10 @@
 
         <div class="logs card">
             <div class="card-head">
-                <h4>System Activity Log</h4>
+                <h4>Activity Log</h4>
+                <div class="date-filter">
+                    <input type="date" id="log-date-picker">
+                </div>
             </div>
             <div class="scroll-content">
                 <ul id="log-list">
@@ -94,7 +113,7 @@
     <div id="modal-remote" class="modal card hidden">
         <h3 class="text-primary">Remote Open</h3>
         <p class="subtitle">Unlock the door via WiFi?</p>
-        
+
         <div style="margin: 20px 0; color: #bae6fd;">
             <p>This action will unlock the door for 5 seconds.</p>
         </div>
@@ -123,11 +142,11 @@
     <div id="modal-otp" class="modal card hidden">
         <h3 class="text-warning">Guest OTP</h3>
         <p class="subtitle">One-time password valid for single use</p>
-        
+
         <div class="otp-display-box">
             <h1 id="otp-value">------</h1>
         </div>
-        
+
         <div class="modal-actions">
             <button id="btn-confirm-otp" class="btn-warning">Send to Lock</button>
             <button class="btn-cancel" onclick="closeAllModals()">Close</button>
@@ -148,4 +167,5 @@
 
 </body>
 <script src="script.js"></script>
+
 </html>

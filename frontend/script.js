@@ -1,14 +1,17 @@
-// ============================================
 // CONFIGURATION
 // ============================================
-const MQTT_SERVER = "192.168.1.7"; 
-const API_URL = "http://localhost:3001/api"; // Địa chỉ Backend Node.js
+// [FIX] Tự động lấy IP từ thanh địa chỉ (để chạy được trên cả điện thoại)
+const SERVER_IP = window.location.hostname || "localhost";
+
+const MQTT_SERVER = SERVER_IP;
+const API_URL = `http://${SERVER_IP}:3001/api`; // Địa chỉ Backend Node.js
+
 
 // Lưu ý: Web dùng WebSockets 
-const MQTT_PORT   = 9001; 
-const MQTT_PATH   = "/mqtt";  
-const MQTT_USER   = ""; // Để trống (vì allow_anonymous true)
-const MQTT_PASS   = ""; // Để trống
+const MQTT_PORT = 9001;
+const MQTT_PATH = "/mqtt";
+const MQTT_USER = ""; // Để trống (vì allow_anonymous true)
+const MQTT_PASS = ""; // Để trống
 
 const MQTT_CMD_TOPIC = "lock/cmd";
 const MQTT_LOG_TOPIC = "lock/log";
@@ -46,6 +49,12 @@ let reconnectAttempts = 0;
 const maxReconnectAttempts = 10;
 let isIntentionalDisconnect = false;
 let currentOtp = "";
+let currentLockId = localStorage.getItem("currentLockId") || "1";  // Lock đang được chọn
+let currentDate = new Date().toISOString().split('T')[0];  // Ngày hiện tại (YYYY-MM-DD)
+
+// Dynamic MQTT Topics based on selected lock
+const getMQTTCmdTopic = () => `lock/${currentLockId}/cmd`;
+const getMQTTLogTopic = () => `lock/${currentLockId}/log`;
 
 // ============================================
 // LOGIN LOGIC
@@ -74,10 +83,10 @@ function showDashboard() {
   dashboardSection.classList.remove("hidden");
   isIntentionalDisconnect = false;
   reconnectAttempts = 0;
-  
+
   // KẾT NỐI MQTT (Để nhận sự kiện real-time)
   connectMQTT();
-  
+
   // GỌI API (Để lấy dữ liệu lịch sử từ MongoDB)
   loadDataFromBackend();
 }
@@ -158,8 +167,8 @@ function onConnect() {
   statusDiv.className = "status-badge connected";
 
   try {
-    client.subscribe(MQTT_LOG_TOPIC, { qos: 1 });
-    addLog("System", "Web Admin connected to MQTT", "success");
+    client.subscribe(getMQTTLogTopic(), { qos: 1 });
+    addLog("System", `Connected to Lock #${currentLockId}`, "success");
   } catch (e) {
     console.error("Subscribe error:", e);
   }
@@ -175,40 +184,42 @@ function onConnectionLost(res) {
 }
 
 function onMessageArrived(message) {
-  // 1. Chỉ xử lý tin nhắn thuộc topic Log hệ thống
-  if (message.destinationName !== MQTT_LOG_TOPIC) return;
+  // 1. Chỉ xử lý tin nhắn thuộc topic Log của lock hiện tại
+  if (message.destinationName !== getMQTTLogTopic()) return;
 
   try {
     const data = JSON.parse(message.payloadString);
     const user = data.user || "Unknown";
     const action = data.action || "unknown_action";
-    
+
     // LOGIC ĐỒNG BỘ DỮ LIỆU (DATA SYNC)
-    
+
     // Xác định các hành động làm thay đổi dữ liệu trong Database
     // (Bao gồm: Thêm mới, Xóa User, hoặc OTP tự hủy sau khi dùng)
-    const isDataChanged = 
-        action.includes("User added") || 
-        action.includes("User deleted") || 
-        action.includes("otp_deleted") || 
-        action === "created_otp";
+    const isDataChanged =
+      action.includes("User added") ||
+      action.includes("User deleted") ||
+      action.includes("otp_deleted") ||
+      action === "created_otp";
 
     // Nếu phát hiện dữ liệu thay đổi -> Gọi API load lại toàn bộ bảng User
     if (isDataChanged) {
-        console.log(`[Sync] Data changed via MQTT (${action}) -> Reloading table...`);
-        loadDataFromBackend(); 
+      console.log(`[Sync] Data changed via MQTT (${action}) -> Reloading table...`);
+      setTimeout(() => {
+        loadDataFromBackend();
+      }, 500);
     }
 
     // LOGIC HIỂN THỊ LOG (UI ACTIVITY)
-    
+
     // Phân loại log để gán màu sắc hiển thị (CSS Class)
     let logType = "";
     if (action.includes("unlocked") || action.includes("otp_used") || action.includes("added")) {
-      logType = "success"; 
+      logType = "success";
     } else if (action.includes("failed") || action.includes("lockout")) {
-      logType = "error";   
+      logType = "error";
     } else if (action.includes("locked") || action.includes("deleted")) {
-      logType = "warning"; 
+      logType = "warning";
     }
 
     // Luôn hiển thị dòng log sự kiện ra màn hình để Admin nắm bắt ngay
@@ -228,7 +239,7 @@ function sendCommand(cmd, payloadObj = {}) {
   try {
     const payload = JSON.stringify({ command: cmd, ...payloadObj });
     const msg = new Paho.MQTT.Message(payload);
-    msg.destinationName = MQTT_CMD_TOPIC;
+    msg.destinationName = getMQTTCmdTopic();
     msg.qos = 1;
     msg.retained = false;
     client.send(msg);
@@ -269,7 +280,7 @@ function addUserToTable(username, pass, type) {
     <td>${pass}</td>
     <td style="text-align: right;">
         <span class="tag ${type === 'otp' ? 'otp' : 'active'}" 
-              style="padding: 2px 8px; border-radius: 4px; background: ${type==='otp'?'#fbbf24':'#34d399'}; color: #000; font-weight: bold; font-size: 0.7rem;">
+              style="padding: 2px 8px; border-radius: 4px; background: ${type === 'otp' ? '#fbbf24' : '#34d399'}; color: #000; font-weight: bold; font-size: 0.7rem;">
             ${type === 'otp' ? 'OTP' : 'User'}
         </span>
     </td>`;
@@ -284,74 +295,78 @@ function removeUserFromTable(username) {
 }
 
 function filterUserTable() {
-    const filter = document.getElementById("search-user").value.toUpperCase();
-    const rows = userTableBody.getElementsByTagName("tr");
-    for (let i = 0; i < rows.length; i++) {
-        const td = rows[i].getElementsByTagName("td")[0];
-        if (td) {
-            const txtValue = td.textContent || td.innerText;
-            if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                rows[i].style.display = "";
-            } else {
-                rows[i].style.display = "none";
-            }
-        }       
+  const filter = document.getElementById("search-user").value.toUpperCase();
+  const rows = userTableBody.getElementsByTagName("tr");
+  for (let i = 0; i < rows.length; i++) {
+    const td = rows[i].getElementsByTagName("td")[0];
+    if (td) {
+      const txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        rows[i].style.display = "";
+      } else {
+        rows[i].style.display = "none";
+      }
     }
+  }
 }
 
 async function loadDataFromBackend() {
-    try {
-        // 1. Tải Logs
-        const logRes = await fetch(`${API_URL}/logs`);
-        const logs = await logRes.json();
-        
-        // Xóa thông báo "Waiting..." cũ
-        const logList = document.getElementById("log-list");
-        logList.innerHTML = "";
+  try {
+    // 1. Tải Logs theo lock_id và date
+    const logRes = await fetch(`${API_URL}/logs/${currentLockId}/${currentDate}`);
+    const logs = await logRes.json();
 
-        logs.forEach(log => {
-            // Xác định loại log để tô màu
-            let logType = "";
-            const action = log.action;
-            if (action.includes("unlocked") || action.includes("otp_used") || action.includes("added")) logType = "success";
-            else if (action.includes("failed") || action.includes("lockout")) logType = "error";
-            else if (action.includes("locked") || action.includes("deleted")) logType = "warning";
+    // Xóa thông báo "Waiting..." cũ
+    const logList = document.getElementById("log-list");
+    logList.innerHTML = "";
 
-            // Format thời gian từ ISO string sang giờ Việt Nam
-            const timeStamp = new Date(log.timestamp).toLocaleTimeString("vi-VN");
-            
-            const li = document.createElement("li");
-            li.className = logType;
-            li.innerHTML = `<strong>[${timeStamp}]</strong> ${log.user}: ${log.action}`;
-            logList.appendChild(li); // Dùng append log cũ xuống dưới
-        });
+    if (logs.length === 0) {
+      logList.innerHTML = '<li class="text-center text-muted">No logs for this date</li>';
+    }
 
-        // 2. Tải Users
-        const userRes = await fetch(`${API_URL}/users`);
-        const users = await userRes.json();
-        
-        const userTableBody = document.getElementById("user-table-body");
-        userTableBody.innerHTML = ""; // Xóa "Loading..."
+    logs.forEach(log => {
+      // Xác định loại log để tô màu
+      let logType = "";
+      const action = log.action;
+      if (action.includes("unlocked") || action.includes("otp_used") || action.includes("added")) logType = "success";
+      else if (action.includes("failed") || action.includes("lockout")) logType = "error";
+      else if (action.includes("locked") || action.includes("deleted")) logType = "warning";
 
-        users.forEach(u => {
-            // Tận dụng hàm addUserToTable có sẵn nhưng sửa lại chút để không check trùng lặp nếu clear hết rồi
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
+      // Format thời gian từ ISO string sang giờ Việt Nam
+      const timeStamp = new Date(log.timestamp).toLocaleTimeString("vi-VN");
+
+      const li = document.createElement("li");
+      li.className = logType;
+      li.innerHTML = `<strong>[${timeStamp}]</strong> ${log.user}: ${log.action}`;
+      logList.appendChild(li); // Dùng append log cũ xuống dưới
+    });
+
+    // 2. Tải Users theo lock_id
+    const userRes = await fetch(`${API_URL}/users/${currentLockId}`);
+    const users = await userRes.json();
+
+    const userTableBody = document.getElementById("user-table-body");
+    userTableBody.innerHTML = ""; // Xóa "Loading..."
+
+    users.forEach(u => {
+      // Tận dụng hàm addUserToTable có sẵn nhưng sửa lại chút để không check trùng lặp nếu clear hết rồi
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
                 <td>${u.username}</td>
                 <td>${u.pass}</td>
                 <td style="text-align: right;">
                     <span class="tag ${u.type === 'otp' ? 'otp' : 'active'}" 
-                          style="padding: 2px 8px; border-radius: 4px; background: ${u.type==='otp'?'#fbbf24':'#34d399'}; color: #000; font-weight: bold; font-size: 0.7rem;">
+                          style="padding: 2px 8px; border-radius: 4px; background: ${u.type === 'otp' ? '#fbbf24' : '#34d399'}; color: #000; font-weight: bold; font-size: 0.7rem;">
                         ${u.type === 'otp' ? 'OTP' : 'User'}
                     </span>
                 </td>`;
-            userTableBody.appendChild(tr);
-        });
+      userTableBody.appendChild(tr);
+    });
 
-    } catch (e) {
-        console.error("Error loading backend data:", e);
-        addLog("System", "Failed to load history from DB", "error");
-    }
+  } catch (e) {
+    console.error("Error loading backend data:", e);
+    addLog("System", "Failed to load history from DB", "error");
+  }
 }
 
 // ============================================
@@ -360,87 +375,157 @@ async function loadDataFromBackend() {
 
 // 1. OPEN MODALS
 document.getElementById("btn-show-remote").addEventListener("click", () => {
-    // Open Remote Modal (Blue)
-    modalOverlay.classList.remove("hidden");
-    modalRemote.classList.remove("hidden");
+  // Open Remote Modal (Blue)
+  modalOverlay.classList.remove("hidden");
+  modalRemote.classList.remove("hidden");
 });
 
 document.getElementById("btn-show-add").addEventListener("click", () => {
-    // Open Add User Modal (Green)
-    inpAddUser.value = "";
-    inpAddPass.value = "";
-    modalOverlay.classList.remove("hidden");
-    modalAdd.classList.remove("hidden");
+  // Open Add User Modal (Green)
+  inpAddUser.value = "";
+  inpAddPass.value = "";
+  modalOverlay.classList.remove("hidden");
+  modalAdd.classList.remove("hidden");
 });
 
 document.getElementById("btn-show-del").addEventListener("click", () => {
-    // Open Delete Modal (Red)
-    inpDelPass.value = "";
-    modalOverlay.classList.remove("hidden");
-    modalDel.classList.remove("hidden");
+  // Open Delete Modal (Red)
+  inpDelPass.value = "";
+  modalOverlay.classList.remove("hidden");
+  modalDel.classList.remove("hidden");
 });
 
 document.getElementById("btn-show-otp").addEventListener("click", () => {
-    // Open OTP Modal (Orange)
-    currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    otpValueDisplay.textContent = currentOtp;
-    modalOverlay.classList.remove("hidden");
-    modalOtp.classList.remove("hidden");
+  // Open OTP Modal (Orange)
+  currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  otpValueDisplay.textContent = currentOtp;
+  modalOverlay.classList.remove("hidden");
+  modalOtp.classList.remove("hidden");
 });
 
 // 2. CLOSE MODALS
 function closeAllModals() {
-    modalOverlay.classList.add("hidden");
-    modalRemote.classList.add("hidden");
-    modalAdd.classList.add("hidden");
-    modalDel.classList.add("hidden");
-    modalOtp.classList.add("hidden");
+  modalOverlay.classList.add("hidden");
+  modalRemote.classList.add("hidden");
+  modalAdd.classList.add("hidden");
+  modalDel.classList.add("hidden");
+  modalOtp.classList.add("hidden");
 }
 
 // 3. ACTION HANDLERS INSIDE MODALS
 
 // --- REMOTE OPEN CONFIRM ---
 document.getElementById("btn-confirm-remote").addEventListener("click", () => {
-    if (sendCommand("remote_open", { user: "WebAdmin" })) {
-        closeAllModals();
-        addLog("Admin", `Remote open command sent`, "success");
-    }
+  if (sendCommand("remote_open", { user: "WebAdmin" })) {
+    closeAllModals();
+    addLog("Admin", `Remote open command sent`, "success");
+  }
 });
 
 // --- ADD USER CONFIRM ---
 document.getElementById("btn-confirm-add").addEventListener("click", () => {
-    const username = inpAddUser.value.trim();
-    const pass = inpAddPass.value.trim();
+  const username = inpAddUser.value.trim();
+  const pass = inpAddPass.value.trim();
 
-    if (!username || !pass) { alert("Please fill all fields"); return; }
-    if (pass.length !== 6 || isNaN(pass)) { alert("Password must be exactly 6 digits"); return; }
+  if (!username || !pass) { alert("Please fill all fields"); return; }
+  if (pass.length !== 6 || isNaN(pass)) { alert("Password must be exactly 6 digits"); return; }
 
-    if (sendCommand("add_user", { pass: pass, username: username })) {
-        closeAllModals();
-        addLog("Admin", `Sent Add User command for ${username}`, "warning");
-    }
+  if (sendCommand("add_user", { pass: pass, username: username })) {
+    closeAllModals();
+    addLog("Admin", `Sent Add User command for ${username}`, "warning");
+  }
 });
 
 // --- DELETE USER CONFIRM ---
 document.getElementById("btn-confirm-del").addEventListener("click", () => {
-    const pass = inpDelPass.value.trim();
-    if (pass.length !== 6 || isNaN(pass)) { alert("Password must be 6 digits"); return; }
+  const pass = inpDelPass.value.trim();
+  if (pass.length !== 6 || isNaN(pass)) { alert("Password must be 6 digits"); return; }
 
-    if (sendCommand("del_user", { pass: pass })) {
-        closeAllModals();
-        addLog("Admin", `Sent Delete User command`, "warning");
-    }
+  if (sendCommand("del_user", { pass: pass })) {
+    closeAllModals();
+    addLog("Admin", `Sent Delete User command`, "warning");
+  }
 });
 
 // --- SEND OTP CONFIRM ---
 document.getElementById("btn-confirm-otp").addEventListener("click", () => {
-    if (sendCommand("add_otp", { pass: currentOtp })) {
-        closeAllModals();
-        addLog("Admin", `Created OTP: ${currentOtp}`, "success");
+  if (sendCommand("add_otp", { pass: currentOtp })) {
+    closeAllModals();
+    addLog("Admin", `Created OTP: ${currentOtp}`, "success");
+  }
+});
+
+// ============================================
+// LOCK SELECTOR HANDLER
+// ============================================
+function switchLock(lockId) {
+  if (lockId === currentLockId) return;
+
+  // Unsubscribe từ lock cũ
+  if (client && client.isConnected()) {
+    try {
+      client.unsubscribe(getMQTTLogTopic());
+    } catch (e) {
+      console.error("Unsubscribe error:", e);
     }
+  }
+
+  // Cập nhật lock hiện tại
+  currentLockId = lockId;
+  localStorage.setItem("currentLockId", lockId);
+
+  // Subscribe vào lock mới
+  if (client && client.isConnected()) {
+    try {
+      client.subscribe(getMQTTLogTopic(), { qos: 1 });
+      addLog("System", `Switched to Lock #${lockId}`, "success");
+    } catch (e) {
+      console.error("Subscribe error:", e);
+    }
+  }
+
+  // Reload data cho lock mới
+  loadDataFromBackend();
+}
+
+// Event listener cho lock selector
+document.getElementById("lock-select").addEventListener("change", (e) => {
+  switchLock(e.target.value);
+});
+
+// Event listener cho date picker
+document.getElementById("log-date-picker").addEventListener("change", (e) => {
+  currentDate = e.target.value;
+  loadDataFromBackend();
 });
 
 // ============================================
 // INITIALIZATION
 // ============================================
+function initSelectors() {
+  // Set lock selector
+  const lockSelect = document.getElementById("lock-select");
+  if (lockSelect) {
+    lockSelect.value = currentLockId;
+  }
+
+  // Set date picker to today
+  const datePicker = document.getElementById("log-date-picker");
+  if (datePicker) {
+    datePicker.value = currentDate;
+  }
+}
+
+// Gọi lại init để include selectors
+const originalInit = init;
+function init() {
+  const isLoggedIn = localStorage.getItem("isLoggedIn");
+  if (isLoggedIn === "true") {
+    showDashboard();
+    initSelectors();
+  } else {
+    showLogin();
+  }
+}
+
 init();
